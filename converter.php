@@ -9,7 +9,7 @@ input.inputNum {
 }
 </style>
 <body>
-    <p>Convert arabic to roman or roman to arabic numbers, from 0 to 4000</p>
+    <p>Convert arabic to roman or roman to arabic numbers, from 1 to 3999</p>
     <form action="converter.php" method="get">
         <input class="inputNum" type="text" name="someNumber" value=""/>
         <input type="submit" name="sendValue" value="Convert"/>
@@ -20,51 +20,52 @@ input.inputNum {
     $romanNums = array('I','IV','V','IX','X','XL','L','XC','C','CD','D','CM','M');
     $arabicNums = array(1,4,5,9,10,40,50,90,100,400,500,900,1000);
     if(isset($_GET['sendValue'])&&$_GET['someNumber']!=""){
-        if(is_numeric($_GET['someNumber']) && $_GET['someNumber']>0 && $_GET['someNumber']<4000 && ctype_digit($_GET['someNumber'])){ //ctype_digit - если в строке только цифры
-            $finalRomanNum = arabicToRoman($_GET['someNumber']); //Вызов функции и передача ей введенных данных
+        //If arabic numberis correct(from 0 to 4000)
+        if(is_numeric($_GET['someNumber']) && $_GET['someNumber']>0 && $_GET['someNumber']<4000 && ctype_digit($_GET['someNumber'])){
+            $finalRomanNum = arabicToRoman($_GET['someNumber']); //Call function and send value
             echo $finalRomanNum;
-        }elseif(is_numeric($_GET['someNumber']) && ($_GET['someNumber']<=0 || $_GET['someNumber']>3999)){
+        }elseif(is_numeric($_GET['someNumber']) && ($_GET['someNumber']<=0 || $_GET['someNumber']>3999)){ //Less than 1 or more than 3999
             echo "Number must be between 0 and 4000 ";
-        }elseif(is_numeric($_GET['someNumber']) && $_GET['someNumber']>0 && !ctype_digit($_GET['someNumber'])){
+        }elseif(is_numeric($_GET['someNumber']) && $_GET['someNumber']>0 && !ctype_digit($_GET['someNumber'])){ //Not integer
             echo "Number must be integer";
-        }else{ //Если введены буквы и цифры
-            $finalArabicNum = romanToArabic(strtoupper($_GET['someNumber'])); //Функция переведет в цифры те буквы, которые есть в массиве и вернет ответ
-            $checkFinalArabicNum = arabicToRoman($finalArabicNum); //Полученный ответ снова будет переведен в римский вариант
-            if($checkFinalArabicNum==strtoupper($_GET['someNumber'])){ //Если введенное римское число совпадает с переведенным
+        }else{ //If digits and letters
+            $finalArabicNum = romanToArabic(strtoupper($_GET['someNumber'])); //Function will convert letter to digits
+            $checkFinalArabicNum = arabicToRoman($finalArabicNum); //After function converted roman number to arabic on the next step another function will convert this arabic number back to roman
+            if($checkFinalArabicNum==strtoupper($_GET['someNumber'])){ //If roman number from function equal roman number from input, then everything is correct 
                 echo $finalArabicNum;
             }else{
                 echo "Incorrect roman number";
             }
         }
     }
-    function arabicToRoman($gotArabicNum){ //Получаем введенные цифры
-        global $arabicNums, $romanNums; //Делаем массивы глобальными, что бы использовать в ф-ии
-        $newRomanNum = ''; //Новая переменная, куда будет записан римский вариант
-        $i = count($arabicNums)-1; //Переменная i для удобства
-        while($gotArabicNum>0){ //Пока введенное число не будет равно нулю
-            if($gotArabicNum>=$arabicNums[$i]){ //Если полученное число/цифра больше или равно числу/цифре из массива с арабскими
-                $newRomanNum .= $romanNums[$i]; //То взять из массива с римскими число/цифру, стоящую на такой же позиции в массиве и добавить в переменную $newRomanNum
-                $gotArabicNum -= $arabicNums[$i]; //От введенного числа отнять число/цифру из арабского массива
-            }else{ //Если не нашлось соответствий, то перейти к элементу массива с меньшим индексом(i), соответсвенно и меньшим общим числовым значением. Числа в обоих массивах записаны по возрастанию
+    function arabicToRoman($gotArabicNum){ //Get arabic number
+        global $arabicNums, $romanNums; //Make array global
+        $newRomanNum = ''; //Variable for new roman number
+        $i = count($arabicNums)-1; //Get number of arabic array's elements and minus 1
+        while($gotArabicNum>0){ //While current arabic number more than 0
+            if($gotArabicNum>=$arabicNums[$i]){ //If current arabic number more or equal than number from arabic array
+                $newRomanNum .= $romanNums[$i]; //Then get number from roman array with same position and add to new roman number
+                $gotArabicNum -= $arabicNums[$i]; //Current arabic number minus number from arabic array
+            }else{ //If current arabic number is less, then go to previous number in arabic array
                 $i--;
             }
         }
-        return $newRomanNum; //Вернуть полученный результат
+        return $newRomanNum; //Return final roman number
     }
 
-    function romanToArabic($gotRomanNum){ //Получаем введенные буквы
+    function romanToArabic($gotRomanNum){ //Get roman number
         global $arabicNums, $romanNums;
-        $newArabicNum = 0; //Новая переменная, где будут складываться арабские числа
+        $newArabicNum = 0; //Variable for arabic new number
         $i = count($romanNums)-1;
-        $posInGotRomanNum = 0; //Переменная для отслеживания позиции внутри строки м римским числом/цифрой
-        while($posInGotRomanNum<strlen($gotRomanNum) && $i>=0){ //Пока позиция меньше длины введенных римских цифр, а i больше, либо равно нулю. Если среди букв не будет ни одной из массива, то без условия для i цикл будет бесконечным. Сдвиг по позиции позволяет проверить всю строку с начала до конца
-            if(substr($gotRomanNum,$posInGotRomanNum,strlen($romanNums[$i]))==$romanNums[$i]){ //Берем самое большое и последнее римское число из массива, смотрим сколько его длина и сравниваем его с таким же количеством(по длине) элементов в веденной строке, начиная с указанной позиции
-                $newArabicNum += $arabicNums[$i]; //Из массива с арабскими числами берем число/цифру с таким же индексом и прибавляем
-                $posInGotRomanNum += strlen($romanNums[$i]); //Позиция сдвигает на длину сравниваемого элемента
-            }else{
+        $posInGotRomanNum = 0; //Starting position inside string with roman number
+        while($posInGotRomanNum<strlen($gotRomanNum) && $i>=0){ //While starting position less than roman number's string length and $i more than 0 (if roman number will not contain any letter from roman array, then loop will be endless with out $i condition)
+            if(substr($gotRomanNum,$posInGotRomanNum,strlen($romanNums[$i]))==$romanNums[$i]){ //Get elements from current roman number, where an amount of elements equal to number's length from roman array and if elements are equal to number from roman array then do next
+                $newArabicNum += $arabicNums[$i]; //Get number from arabic array with same position and plus it with new arabic number
+                $posInGotRomanNum += strlen($romanNums[$i]); //Change starting position by adding length of comparing number from roman array to current starting position
+            }else{ //If elements are not equal, then go to previous number inroman array
                 $i--;
             }
         }
-        return $newArabicNum;
+        return $newArabicNum; //Return final arabic number
     }
 ?>
